@@ -1,4 +1,5 @@
 # Practical-4
+rm(list=ls()) # Remove all previous variables
 
 # (a) Import the data as a time series object.
 # Load data

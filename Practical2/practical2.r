@@ -1,4 +1,5 @@
 # Practical-2
+rm(list=ls()) # Remove all previous variables
 
 # (a) Write the R command to load the library in which the “Nottem” dataset is available.
 # The 'nottem' dataset is part of the standard R 'datasets' package, which is loaded by default.

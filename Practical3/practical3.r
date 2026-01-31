@@ -1,4 +1,5 @@
 # Practical-3
+rm(list=ls()) # Remove all previous variables
 
 # Consider the following datasets from the R library and write R code to decompose the
 # time-series data into its trend, seasonal, and residual components. Furthermore, identify

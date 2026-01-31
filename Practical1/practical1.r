@@ -1,4 +1,5 @@
 # Practical-1
+rm(list=ls()) # Remove all previous variables
 
 # (a) Entered the data into an Excel file.
 # The data has been saved to "us_population.csv".
