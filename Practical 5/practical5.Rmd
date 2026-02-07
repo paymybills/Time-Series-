@@ -1,0 +1,317 @@
+---
+title: "Time Series Analysis - Practical 5"
+subtitle: "Commercial Bank Real Estate Loans Analysis"
+author: "TSA Practical 5"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 6)
+```
+
+# Objective
+
+Analyze the monthly volume of commercial bank real estate loans (in billions of dollars) to:
+
+- Import and visualize the data
+- Identify dominant components (trend, seasonality, etc.)
+- Test for stationarity using ACF/PACF plots
+- Perform Augmented Dickey-Fuller (ADF) test for stationarity
+
+# Dataset Information
+
+- **File**: `bank_case.txt`
+- **Description**: Monthly volume of commercial bank real estate loans in billions of dollars
+- **Number of observations**: 70 months
+
+---
+
+# (a) Import Data into R Environment
+
+Read the data from the text file and display basic information:
+
+```{r import-data}
+# Read the data from text file
+bank_data <- scan("bank_case.txt", quiet = TRUE)
+
+# Display the first few values
+cat("First 10 values:\n")
+print(head(bank_data, 10))
+
+cat("\nLast 10 values:\n")
+print(tail(bank_data, 10))
+
+cat("\nTotal number of observations:", length(bank_data), "\n")
+cat("Range: [", min(bank_data), ",", max(bank_data), "]\n")
+cat("Mean:", mean(bank_data), "\n")
+cat("Standard Deviation:", sd(bank_data), "\n")
+```
+
+---
+
+# (b) Convert Data into Time Series Object
+
+Create a time series object with monthly frequency:
+
+```{r create-ts}
+# Convert to time series object
+# Assuming monthly data (frequency = 12)
+bank_ts <- ts(bank_data, frequency = 12, start = c(1, 1))
+
+# Display time series summary
+print(bank_ts)
+```
+
+---
+
+# (c) Plot Data to Identify Dominant Component
+
+## Main Time Series Plot
+
+```{r plot-main, fig.cap="Commercial Bank Real Estate Loans Over Time"}
+# Main time series plot with trend line
+plot(bank_ts, 
+     main = "Commercial Bank Real Estate Loans Over Time",
+     xlab = "Time (Months)",
+     ylab = "Loan Volume (Billions of Dollars)",
+     col = "blue",
+     lwd = 2)
+grid()
+
+# Add a trend line
+abline(lm(bank_ts ~ time(bank_ts)), col = "red", lwd = 2, lty = 2)
+legend("topleft", 
+       legend = c("Original Data", "Trend Line"), 
+       col = c("blue", "red"), 
+       lty = c(1, 2), 
+       lwd = 2)
+```
+
+**Observation**: The plot shows a clear **upward trend** in the loan volume over time, with values increasing from approximately 46.5 to 87.6 billion dollars.
+
+## Time Series Decomposition
+
+```{r decompose, fig.height=8, fig.cap="Decomposition of Time Series Components"}
+# Decompose the time series
+decomposed <- decompose(bank_ts)
+plot(decomposed)
+```
+
+**Analysis of Components**:
+
+- **Trend**: Strong upward trend throughout the series
+- **Seasonal**: Some periodic fluctuations
+- **Random**: Residual variation after removing trend and seasonal components
+
+**Conclusion**: The **dominant component is the TREND**, showing consistent growth in bank real estate loans.
+
+---
+
+# (d) Check Stationarity Using ACF/PACF Plots
+
+```{r acf-pacf, fig.height=8, fig.cap="ACF and PACF Plots for Stationarity Assessment"}
+# Set up plotting area
+par(mfrow = c(2, 1))
+
+# ACF plot
+acf(bank_ts, 
+    main = "Autocorrelation Function (ACF)",
+    lag.max = 36,
+    col = "blue",
+    lwd = 2)
+
+# PACF plot
+pacf(bank_ts, 
+     main = "Partial Autocorrelation Function (PACF)",
+     lag.max = 36,
+     col = "red",
+     lwd = 2)
+
+# Reset plotting area
+par(mfrow = c(1, 1))
+```
+
+## ACF/PACF Interpretation
+
+- **ACF**: Shows slow, gradual decay - this is a strong indicator of **non-stationarity**
+- **PACF**: First few lags are significant, then cuts off
+- **Conclusion**: The ACF pattern (slow decay) strongly suggests the series is **non-stationary**
+
+**Why this indicates non-stationarity**:
+
+- Stationary series would show ACF cutting off quickly
+- The persistent high correlation at many lags indicates a trend component
+- Non-constant mean over time (upward trend visible in plot)
+
+---
+
+# (e) Augmented Dickey-Fuller (ADF) Test
+
+```{r adf-test}
+# Load tseries package for ADF test
+library(tseries, quietly = TRUE)
+
+cat("\n========== Augmented Dickey-Fuller Test ==========\n")
+cat("Null Hypothesis (H0): Series has a unit root (non-stationary)\n")
+cat("Alternative Hypothesis (H1): Series is stationary\n")
+cat("Significance level: α = 0.05\n\n")
+
+# Perform ADF test
+adf_test <- adf.test(bank_ts, alternative = "stationary")
+print(adf_test)
+```
+
+## Test Interpretation
+
+```{r adf-interpretation, echo=FALSE}
+cat("\n--- Interpretation ---\n")
+cat("Test Statistic:", adf_test$statistic, "\n")
+cat("P-value:", adf_test$p.value, "\n\n")
+
+if (adf_test$p.value < 0.05) {
+    cat("Decision: REJECT H0 (p-value < 0.05)\n")
+    cat("Conclusion: The series is STATIONARY\n")
+} else {
+    cat("Decision: FAIL TO REJECT H0 (p-value >= 0.05)\n")
+    cat("Conclusion: The series is NON-STATIONARY\n")
+    cat("\nImplication: The series contains a unit root and exhibits non-stationary behavior.\n")
+    cat("Recommendation: Apply differencing to achieve stationarity.\n")
+}
+```
+
+---
+
+# First Difference Analysis
+
+Since the original series is non-stationary, we apply first differencing:
+
+```{r first-difference}
+cat("\n========== Testing First Difference ==========\n\n")
+
+# Compute first difference
+bank_diff <- diff(bank_ts)
+
+cat("Summary statistics of differenced series:\n")
+cat("Mean:", mean(bank_diff), "\n")
+cat("Variance:", var(bank_diff), "\n")
+cat("Standard Deviation:", sd(bank_diff), "\n")
+```
+
+## Plot of First Difference
+
+```{r plot-diff, fig.cap="First Difference of Bank Loan Data"}
+plot(bank_diff,
+     main = "First Difference of Bank Loan Data",
+     xlab = "Time",
+     ylab = "Differenced Values (Billions $)",
+     col = "darkgreen",
+     lwd = 2)
+grid()
+abline(h = 0, col = "red", lty = 2)
+abline(h = mean(bank_diff), col = "blue", lty = 2)
+legend("topright", 
+       legend = c("Differenced Series", "Zero Line", "Mean"), 
+       col = c("darkgreen", "red", "blue"), 
+       lty = c(1, 2, 2), 
+       lwd = c(2, 1, 1))
+```
+
+**Observation**: The differenced series appears more stable, fluctuating around a constant mean.
+
+## ADF Test on First Difference
+
+```{r adf-diff}
+# ADF test on differenced series
+adf_diff <- adf.test(bank_diff, alternative = "stationary")
+print(adf_diff)
+
+cat("\n--- Interpretation of Differenced Series ---\n")
+if (adf_diff$p.value < 0.05) {
+    cat("Decision: REJECT H0 (p-value < 0.05)\n")
+    cat("Conclusion: The FIRST DIFFERENCE is STATIONARY\n")
+    cat("\nThe original series is integrated of order 1, denoted I(1)\n")
+    cat("This means one differencing operation is sufficient to achieve stationarity.\n")
+} else {
+    cat("Decision: FAIL TO REJECT H0\n")
+    cat("Conclusion: Additional differencing may be needed\n")
+}
+```
+
+---
+
+# Summary of Findings
+
+## Key Results
+
+1. **Data Characteristics**:
+   - 70 monthly observations
+   - Range: 46.5 to 87.6 billion dollars
+   - Strong upward trend throughout the period
+
+2. **Dominant Component**: 
+   - **TREND** - Clear, consistent upward movement in loan volumes
+
+3. **Stationarity Tests**:
+   
+   | Test Method | Result | Evidence |
+   |-------------|--------|----------|
+   | Visual Inspection | Non-stationary | Upward trend visible |
+   | ACF Plot | Non-stationary | Slow decay of autocorrelations |
+   | ADF Test | Non-stationary | p-value = `r round(adf_test$p.value, 4)` > 0.05 |
+   | First Difference ADF | Check results | p-value = `r round(adf_diff$p.value, 4)` |
+
+4. **Statistical Conclusion**:
+   - Original series is **non-stationary** (fails ADF test)
+   - Contains a unit root
+   - Mean and variance change over time
+   - First differencing applied to achieve stationarity
+
+## Implications for Time Series Modeling
+
+- **ARIMA Modeling**: The series requires differencing (d=1 or d=2)
+- **Forecast Method**: Should account for the trend component
+- **Transformation**: First difference removes the trend, making the series more suitable for modeling
+- **Model Suggestion**: Consider ARIMA(p,1,q) model
+
+---
+
+# Theoretical Background
+
+## Stationarity
+
+A time series $\{X_t\}$ is **stationary** if:
+
+1. $E[X_t] = \mu$ (constant mean)
+2. $Var(X_t) = \sigma^2$ (constant variance)
+3. $Cov(X_t, X_{t+k}) = \gamma_k$ (covariance depends only on lag $k$)
+
+## Augmented Dickey-Fuller Test
+
+The ADF test examines the null hypothesis:
+
+$$H_0: \text{The series has a unit root (non-stationary)}$$
+$$H_1: \text{The series is stationary}$$
+
+The test equation is:
+$$\Delta Y_t = \alpha + \beta t + \gamma Y_{t-1} + \sum_{i=1}^{p} \delta_i \Delta Y_{t-i} + \epsilon_t$$
+
+Where $\gamma < 0$ under the alternative hypothesis.
+
+## Differencing Operator
+
+First difference: $\nabla X_t = X_t - X_{t-1} = (1-B)X_t$
+
+Where $B$ is the backshift operator: $BX_t = X_{t-1}$
+
+---
+
+**Analysis Complete**

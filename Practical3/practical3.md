@@ -1,4 +1,4 @@
-# TSA Practical 3 Report
+# TSA Practical 3 
 
 ## Practical Questions
 **Consider the following datasets from the R library and write R code to decompose the time-series data into its trend, seasonal, and residual components. Furthermore, identify the dominating component(s) in the dataset:**
