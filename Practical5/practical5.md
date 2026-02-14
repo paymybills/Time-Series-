@@ -16,12 +16,23 @@ Analyze the monthly volume of commercial bank real estate loans (in billions of 
 
 ### (a) Import Data
 ```r
+# Import data into the R environment
 bank_data <- scan("bank_case.txt")
+
+# Display the first few values
+cat("First 10 values:\n")
+print(head(bank_data, 10))
 ```
 
 ### (b) Create Time Series Object
 ```r
+# Convert the data into a time series object
+# Assuming monthly data starting from month 1, year 1
 bank_ts <- ts(bank_data, frequency = 12, start = c(1, 1))
+
+# Display time series summary
+cat("\nTime Series Object Summary:\n")
+print(bank_ts)
 ```
 - Frequency = 12 (monthly data)
 - Creates a proper time series object for analysis
@@ -29,7 +40,35 @@ bank_ts <- ts(bank_data, frequency = 12, start = c(1, 1))
 ### (c) Identify Dominant Component
 
 **Time series plot**: Visual inspection of overall pattern
+```r
+# Main time series plot
+png("plot1_timeseries.png", width = 800, height = 600)
+plot(bank_ts, 
+     main = "Commercial Bank Real Estate Loans Over Time",
+     xlab = "Time",
+     ylab = "Loan Volume (Billions of Dollars)",
+     col = "blue",
+     lwd = 2)
+grid()
+
+# Add a trend line to visualize the trend component
+abline(lm(bank_ts ~ time(bank_ts)), col = "red", lwd = 2, lty = 2)
+legend("topleft", 
+       legend = c("Original Data", "Trend Line"), 
+       col = c("blue", "red"), 
+       lty = c(1, 2), 
+       lwd = 2)
+dev.off()
+```
+
 - **Decomposition**: Separates trend, seasonal, and random components
+```r
+# Decompose the time series to see components
+decomposed <- decompose(bank_ts)
+png("plot2_decomposition.png", width = 800, height = 800)
+plot(decomposed)
+dev.off()
+```
 - **Expected findings**: 
   - Strong upward trend visible in the data
   - Possible seasonal patterns
@@ -43,6 +82,30 @@ bank_ts <- ts(bank_data, frequency = 12, start = c(1, 1))
 **Figure 2**: Time series decomposition showing trend, seasonal, and random components. The **dominant component is the TREND** with consistent upward growth.
 
 ### (d) ACF/PACF Analysis
+
+```r
+# Set up plotting area for ACF and PACF
+png("plot3_acf_pacf.png", width = 800, height = 800)
+par(mfrow = c(2, 1))
+
+# ACF plot
+acf(bank_ts, 
+    main = "Autocorrelation Function (ACF) of Bank Loan Data",
+    lag.max = 36,
+    col = "blue",
+    lwd = 2)
+
+# PACF plot
+pacf(bank_ts, 
+     main = "Partial Autocorrelation Function (PACF) of Bank Loan Data",
+     lag.max = 36,
+     col = "red",
+     lwd = 2)
+
+# Reset plotting area
+par(mfrow = c(1, 1))
+dev.off()
+```
 
 ![ACF and PACF Plots](plot3_acf_pacf.png)
 
@@ -64,6 +127,15 @@ bank_ts <- ts(bank_data, frequency = 12, start = c(1, 1))
 **Conclusion**: The ACF shows slow, gradual decay which is a strong indicator of **non-stationarity**.
 
 ### (e) Augmented Dickey-Fuller Test
+
+```r
+library(tseries)
+
+# Perform ADF test
+adf_test <- adf.test(bank_ts, alternative = "stationary")
+print(adf_test)
+```
+
 **Hypotheses**:
 - H₀: Series has a unit root (non-stationary)
 - H₁: Series is stationary
@@ -76,6 +148,29 @@ bank_ts <- ts(bank_data, frequency = 12, start = c(1, 1))
 - Apply first differencing
 - Re-test the differenced series
 - Continue until stationarity is achieved
+
+```r
+# Test on first difference if original is non-stationary
+if (adf_test$p.value >= 0.05) {
+    bank_diff <- diff(bank_ts)
+    
+    # Plot the differenced series
+    png("plot4_first_difference.png", width = 800, height = 600)
+    plot(bank_diff,
+         main = "First Difference of Bank Loan Data",
+         xlab = "Time",
+         ylab = "Differenced Values",
+         col = "darkgreen",
+         lwd = 2)
+    grid()
+    abline(h = 0, col = "red", lty = 2)
+    dev.off()
+    
+    # ADF test on differenced series
+    adf_diff <- adf.test(bank_diff, alternative = "stationary")
+    print(adf_diff)
+}
+```
 
 ![First Difference](plot4_first_difference.png)
 

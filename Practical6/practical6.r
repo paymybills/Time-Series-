@@ -158,70 +158,69 @@ adf_log <- adf.test(log_passengers, alternative = "stationary")
 cat("\n--- ADF Test on Log-Transformed Series ---\n")
 print(adf_log)
 
-if (adf_log$p.value >= 0.05) {
-    # Test on first difference of log
-    cat("\n========== Testing First Difference of Log Series ==========\n")
-    cat("Applying first differencing to remove trend...\n\n")
+# Always perform differencing for demonstration purposes
+cat("\n========== Performing Differencing for Analysis ==========\n")
+cat("Applying first differencing to remove trend...\n\n")
+
+diff_log_passengers <- diff(log_passengers)
+
+png("plot6_diff_log.png", width = 800, height = 600)
+plot(diff_log_passengers,
+     main = "First Difference of Log(AirPassengers)",
+     xlab = "Year",
+     ylab = "Differenced Log(Passengers)",
+     col = "purple",
+     lwd = 2)
+grid()
+abline(h = 0, col = "red", lty = 2)
+abline(h = mean(diff_log_passengers), col = "blue", lty = 2)
+dev.off()
+
+cat("Differenced log plot saved: plot6_diff_log.png\n")
+
+adf_diff_log <- adf.test(diff_log_passengers, alternative = "stationary")
+cat("\n--- ADF Test on Differenced Log Series ---\n")
+print(adf_diff_log)
+
+if (adf_diff_log$p.value < 0.05) {
+    cat("\nThe differenced log series is STATIONARY\n")
+    cat("Transformation: log(X) then difference → achieves stationarity\n")
+}
+
+# Test seasonal difference as well
+cat("\n========== Testing Seasonal Difference ==========\n")
+cat("Applying seasonal differencing (lag=12) to remove seasonality...\n\n")
+
+seasonal_diff <- diff(diff_log_passengers, lag = 12)
+
+png("plot7_seasonal_diff.png", width = 800, height = 600)
+plot(seasonal_diff,
+     main = "Seasonal Difference of Differenced Log(AirPassengers)",
+     xlab = "Year",
+     ylab = "Seasonally Differenced Values",
+     col = "orange",
+     lwd = 2)
+grid()
+abline(h = 0, col = "red", lty = 2)
+dev.off()
+
+cat("Seasonal difference plot saved: plot7_seasonal_diff.png\n")
+
+# Check if we have enough data for seasonal ADF test
+if (length(seasonal_diff) > 13) {
+    adf_seasonal <- adf.test(seasonal_diff, alternative = "stationary")
+    cat("\n--- ADF Test on Seasonally Differenced Series ---\n")
+    print(adf_seasonal)
     
-    diff_log_passengers <- diff(log_passengers)
-    
-    png("plot6_diff_log.png", width = 800, height = 600)
-    plot(diff_log_passengers,
-         main = "First Difference of Log(AirPassengers)",
-         xlab = "Year",
-         ylab = "Differenced Log(Passengers)",
-         col = "purple",
-         lwd = 2)
-    grid()
-    abline(h = 0, col = "red", lty = 2)
-    abline(h = mean(diff_log_passengers), col = "blue", lty = 2)
-    dev.off()
-    
-    cat("Differenced log plot saved: plot6_diff_log.png\n")
-    
-    adf_diff_log <- adf.test(diff_log_passengers, alternative = "stationary")
-    cat("\n--- ADF Test on Differenced Log Series ---\n")
-    print(adf_diff_log)
-    
-    if (adf_diff_log$p.value < 0.05) {
-        cat("\nThe differenced log series is STATIONARY\n")
-        cat("Transformation: log(X) then difference → achieves stationarity\n")
-    }
-    
-    # Test seasonal difference as well
-    cat("\n========== Testing Seasonal Difference ==========\n")
-    cat("Applying seasonal differencing (lag=12) to remove seasonality...\n\n")
-    
-    seasonal_diff <- diff(diff_log_passengers, lag = 12)
-    
-    png("plot7_seasonal_diff.png", width = 800, height = 600)
-    plot(seasonal_diff,
-         main = "Seasonal Difference of Differenced Log(AirPassengers)",
-         xlab = "Year",
-         ylab = "Seasonally Differenced Values",
-         col = "orange",
-         lwd = 2)
-    grid()
-    abline(h = 0, col = "red", lty = 2)
-    dev.off()
-    
-    cat("Seasonal difference plot saved: plot7_seasonal_diff.png\n")
-    
-    # Check if we have enough data for seasonal ADF test
-    if (length(seasonal_diff) > 13) {
-        adf_seasonal <- adf.test(seasonal_diff, alternative = "stationary")
-        cat("\n--- ADF Test on Seasonally Differenced Series ---\n")
-        print(adf_seasonal)
-        
-        if (adf_seasonal$p.value < 0.05) {
-            cat("\nThe fully differenced series is STATIONARY\n")
-            cat("Suggested ARIMA model: ARIMA(p,1,q)(P,1,Q)[12]\n")
-            cat("This is a seasonal ARIMA model with:\n")
-            cat("- Regular differencing (d=1)\n")
-            cat("- Seasonal differencing (D=1) at lag 12\n")
-        }
+    if (adf_seasonal$p.value < 0.05) {
+        cat("\nThe fully differenced series is STATIONARY\n")
+        cat("Suggested ARIMA model: ARIMA(p,1,q)(P,1,Q)[12]\n")
+        cat("This is a seasonal ARIMA model with:\n")
+        cat("- Regular differencing (d=1)\n")
+        cat("- Seasonal differencing (D=1) at lag 12\n")
     }
 }
+
 
 cat("\n========== Summary of Findings ==========\n")
 cat("1. Data Type: Monthly time series (144 observations, 1949-1960)\n")

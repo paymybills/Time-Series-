@@ -22,10 +22,20 @@ Analyze the AirPassengers dataset from R library to:
 ### (a) Convert Data into Time Series Object
 
 ```r
-# Load the AirPassengers dataset
+# Load the AirPassengers dataset (built-in R dataset)
 data(AirPassengers)
 
-# It's already a time series object
+# Display information about the dataset
+cat("Dataset: AirPassengers\n")
+cat("Number of observations:", length(AirPassengers), "\n")
+cat("Start:", start(AirPassengers), "\n")
+cat("End:", end(AirPassengers), "\n")
+cat("Frequency:", frequency(AirPassengers), "\n\n")
+
+# Display first few values
+print(head(AirPassengers, 12))
+
+# Check class
 class(AirPassengers)  # "ts"
 ```
 
@@ -44,6 +54,19 @@ The AirPassengers dataset is already a built-in time series object in R with:
 
 ### (b) Plot Data to Identify Dominant Component
 
+```r
+# Plot the original series
+png("plot1_airpassengers.png", width = 800, height = 600)
+plot(AirPassengers, 
+     main = "International Airline Passengers (1949-1960)",
+     xlab = "Year",
+     ylab = "Number of Passengers (thousands)",
+     col = "blue",
+     lwd = 2)
+grid()
+dev.off()
+```
+
 ![AirPassengers Time Series](plot1_airpassengers.png)
 
 **Figure 1**: International airline passengers from 1949 to 1960.
@@ -60,6 +83,15 @@ The AirPassengers dataset is already a built-in time series object in R with:
 
 ### (c) Decompose Time Series
 
+```r
+# Decompose using multiplicative model (variance increases with level)
+decomposed <- decompose(AirPassengers, type = "multiplicative")
+
+png("plot2_decomposition.png", width = 800, height = 800)
+plot(decomposed)
+dev.off()
+```
+
 ![Multiplicative Decomposition](plot2_decomposition.png)
 
 **Figure 2**: Multiplicative decomposition of AirPassengers data.
@@ -72,6 +104,15 @@ The AirPassengers dataset is already a built-in time series object in R with:
    - Peaks in summer months (July-August)
    - Troughs in winter months (November-February)
 4. **Random Component**: Irregular variations after removing trend and seasonality
+
+```r
+# Additive decomposition for comparison
+decomposed_add <- decompose(AirPassengers, type = "additive")
+
+png("plot3_decomposition_additive.png", width = 800, height = 800)
+plot(decomposed_add)
+dev.off()
+```
 
 ![Additive Decomposition](plot3_decomposition_additive.png)
 
@@ -86,6 +127,29 @@ The AirPassengers dataset is already a built-in time series object in R with:
 ---
 
 ### (d) ACF/PACF Analysis for Stationarity
+
+```r
+# Plot ACF and PACF
+png("plot4_acf_pacf.png", width = 800, height = 800)
+par(mfrow = c(2, 1))
+
+# ACF plot
+acf(AirPassengers, 
+    main = "Autocorrelation Function (ACF) of AirPassengers",
+    lag.max = 48,
+    col = "blue",
+    lwd = 2)
+
+# PACF plot
+pacf(AirPassengers, 
+     main = "Partial Autocorrelation Function (PACF) of AirPassengers",
+     lag.max = 48,
+     col = "red",
+     lwd = 2)
+
+par(mfrow = c(1, 1))
+dev.off()
+```
 
 ![ACF and PACF Plots](plot4_acf_pacf.png)
 
@@ -110,6 +174,14 @@ The AirPassengers dataset is already a built-in time series object in R with:
 
 #### Test on Original Series
 
+```r
+library(tseries)
+
+# Perform ADF test on original series
+adf_test <- adf.test(AirPassengers, alternative = "stationary")
+print(adf_test)
+```
+
 **Hypotheses**:
 - H₀: Series has a unit root (non-stationary)
 - H₁: Series is stationary
@@ -127,6 +199,21 @@ Since the original series is non-stationary, we apply transformations:
 
 ##### 1. Log Transformation
 
+```r
+# Apply log transformation to stabilize variance
+log_passengers <- log(AirPassengers)
+
+png("plot5_log_transform.png", width = 800, height = 600)
+plot(log_passengers,
+     main = "Log-Transformed AirPassengers",
+     xlab = "Year",
+     ylab = "Log(Passengers)",
+     col = "darkgreen",
+     lwd = 2)
+grid()
+dev.off()
+```
+
 ![Log-Transformed Series](plot5_log_transform.png)
 
 **Figure 5**: Log transformation of AirPassengers to stabilize variance.
@@ -135,6 +222,22 @@ Since the original series is non-stationary, we apply transformations:
 **Effect**: Makes seasonal fluctuations more uniform across time
 
 ##### 2. First Differencing
+
+```r
+# Apply first differencing to remove trend
+diff_log_passengers <- diff(log_passengers)
+
+png("plot6_diff_log.png", width = 800, height = 600)
+plot(diff_log_passengers,
+     main = "First Difference of Log(AirPassengers)",
+     xlab = "Year",
+     ylab = "Differenced Log(Passengers)",
+     col = "purple",
+     lwd = 2)
+grid()
+abline(h = 0, col = "red", lty = 2)
+dev.off()
+```
 
 ![First Difference of Log](plot6_diff_log.png)
 
@@ -145,6 +248,22 @@ Since the original series is non-stationary, we apply transformations:
 **Effect**: Series now fluctuates around a constant mean (zero line)
 
 ##### 3. Seasonal Differencing
+
+```r
+# Apply seasonal differencing (lag=12) to remove seasonality
+seasonal_diff <- diff(diff_log_passengers, lag = 12)
+
+png("plot7_seasonal_diff.png", width = 800, height = 600)
+plot(seasonal_diff,
+     main = "Seasonal Difference of Differenced Log(AirPassengers)",
+     xlab = "Year",
+     ylab = "Seasonally Differenced Values",
+     col = "orange",
+     lwd = 2)
+grid()
+abline(h = 0, col = "red", lty = 2)
+dev.off()
+```
 
 ![Seasonal Difference](plot7_seasonal_diff.png)
 
