@@ -170,7 +170,7 @@ dev.off()
 
 ---
 
-### (e) Augmented Dickey-Fuller Test
+### (e) Augmented Dickey-Fuller & KPSS Test
 
 #### Test on Original Series
 
@@ -180,16 +180,23 @@ library(tseries)
 # Perform ADF test on original series
 adf_test <- adf.test(AirPassengers, alternative = "stationary")
 print(adf_test)
+
+# Perform KPSS test on original series
+kpss_test <- kpss.test(AirPassengers, null = "Trend")
+print(kpss_test)
 ```
 
-**Hypotheses**:
-- H₀: Series has a unit root (non-stationary)
-- H₁: Series is stationary
-- Significance level: α = 0.05
+**ADF Test**:
+- H₀: Non-stationary
+- H₁: Stationary
+- Expected p-value > 0.05 (Fail to reject H₀)
 
-**Expected Results** (p-value > 0.05):
-- **Decision**: FAIL TO REJECT H₀
-- **Conclusion**: The original series is **NON-STATIONARY**
+**KPSS Test**:
+- H₀: Stationary (Trend-stationary)
+- H₁: Non-stationary
+- Expected p-value < 0.05 (Reject H₀)
+
+**Conclusion**: Both tests confirm the original series is **NON-STATIONARY**.
 
 ---
 
@@ -212,6 +219,10 @@ plot(log_passengers,
      lwd = 2)
 grid()
 dev.off()
+
+# ADF & KPSS on Log Series
+print(adf.test(log_passengers, alternative = "stationary"))
+print(kpss.test(log_passengers, null = "Trend"))
 ```
 
 ![Log-Transformed Series](plot5_log_transform.png)
@@ -237,6 +248,10 @@ plot(diff_log_passengers,
 grid()
 abline(h = 0, col = "red", lty = 2)
 dev.off()
+
+# ADF & KPSS on Differenced Log Series
+print(adf.test(diff_log_passengers, alternative = "stationary"))
+print(kpss.test(diff_log_passengers, null = "Level"))
 ```
 
 ![First Difference of Log](plot6_diff_log.png)
@@ -263,6 +278,10 @@ plot(seasonal_diff,
 grid()
 abline(h = 0, col = "red", lty = 2)
 dev.off()
+
+# ADF & KPSS on Seasonally Differenced Series
+print(adf.test(seasonal_diff, alternative = "stationary"))
+print(kpss.test(seasonal_diff, null = "Level"))
 ```
 
 ![Seasonal Difference](plot7_seasonal_diff.png)
@@ -273,7 +292,7 @@ dev.off()
 **Formula**: ∇₁₂∇log(Xₜ) = ∇log(Xₜ) - ∇log(Xₜ₋₁₂)
 **Effect**: Removes the yearly seasonal pattern
 
-**Final ADF Test Result**: After transformations, the series becomes **STATIONARY** (p-value < 0.05)
+**Final Result**: After all transformations, the series passes both **ADF (p < 0.05)** and **KPSS (p > 0.05)** tests, confirming it is now **STATIONARY**.
 
 ---
 

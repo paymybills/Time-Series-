@@ -126,7 +126,7 @@ dev.off()
 
 **Conclusion**: The ACF shows slow, gradual decay which is a strong indicator of **non-stationarity**.
 
-### (e) Augmented Dickey-Fuller Test
+### (e) Augmented Dickey-Fuller & KPSS Test
 
 ```r
 library(tseries)
@@ -134,15 +134,23 @@ library(tseries)
 # Perform ADF test
 adf_test <- adf.test(bank_ts, alternative = "stationary")
 print(adf_test)
+
+# Perform KPSS test
+kpss_test <- kpss.test(bank_ts, null = "Trend")
+print(kpss_test)
 ```
 
-**Hypotheses**:
+**ADF Hypotheses**:
 - H₀: Series has a unit root (non-stationary)
 - H₁: Series is stationary
 
+**KPSS Hypotheses**:
+- H₀: Series is trend-stationary (stationary)
+- H₁: Series has a unit root (non-stationary)
+
 **Decision Rule**:
-- If p-value < 0.05: Reject H₀ → Series is stationary
-- If p-value ≥ 0.05: Fail to reject H₀ → Series is non-stationary
+- ADF p-value < 0.05: Reject H₀ → Stationary
+- KPSS p-value < 0.05: Reject H₀ → Non-stationary
 
 **Remedial Actions** (if non-stationary):
 - Apply first differencing
@@ -151,7 +159,7 @@ print(adf_test)
 
 ```r
 # Test on first difference if original is non-stationary
-if (adf_test$p.value >= 0.05) {
+if (adf_test$p.value >= 0.05 || kpss_test$p.value < 0.05) {
     bank_diff <- diff(bank_ts)
     
     # Plot the differenced series
@@ -167,8 +175,10 @@ if (adf_test$p.value >= 0.05) {
     dev.off()
     
     # ADF test on differenced series
-    adf_diff <- adf.test(bank_diff, alternative = "stationary")
-    print(adf_diff)
+    print(adf.test(bank_diff, alternative = "stationary"))
+
+    # KPSS test on differenced series
+    print(kpss.test(bank_diff, null = "Level"))
 }
 ```
 
@@ -201,16 +211,7 @@ Based on the data pattern (increasing from 46.5 to 87.6):
 | Stationarity (Statistical) | ADF Test | Non-stationary (p = 0.9894) |
 | First Difference | Differencing | Still shows some dependencies |
 
-## Running the Analysis
-```bash
-cd "TSA/Practical 5"
-Rscript practical5.r
-```
 
-Or in R console:
-```r
-source("practical5.r")
-```
 
 ## Key Concepts
 

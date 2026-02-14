@@ -116,9 +116,28 @@ if (tseries_available) {
         cat("Conclusion: The series is NON-STATIONARY\n")
         cat("Suggestion: Consider differencing the series to make it stationary\n")
     }
+
+    cat("\n========== KPSS Test ==========\n")
+    cat("Null Hypothesis (H0): The series is trend-stationary\n")
+    cat("Alternative Hypothesis (H1): The series has a unit root (non-stationary)\n\n")
+    
+    # Perform KPSS test
+    kpss_test <- kpss.test(bank_ts, null = "Trend")
+    print(kpss_test)
+    
+    cat("\nInterpretation:\n")
+    if (kpss_test$p.value < 0.05) {
+        cat("p-value =", kpss_test$p.value, "< 0.05\n")
+        cat("Result: REJECT the null hypothesis\n")
+        cat("Conclusion: The series is NON-STATIONARY\n")
+    } else {
+        cat("p-value =", kpss_test$p.value, ">= 0.05\n")
+        cat("Result: FAIL TO REJECT the null hypothesis\n")
+        cat("Conclusion: The series is STATIONARY\n")
+    }
     
     # Additional analysis: Test on first difference if original is non-stationary
-    if (adf_test$p.value >= 0.05) {
+    if (adf_test$p.value >= 0.05 || kpss_test$p.value < 0.05) {
         cat("\n========== Testing First Difference ==========\n")
         bank_diff <- diff(bank_ts)
         
@@ -137,8 +156,12 @@ if (tseries_available) {
         # ADF test on differenced series
         adf_diff <- adf.test(bank_diff, alternative = "stationary")
         print(adf_diff)
+
+        # KPSS test on differenced series
+        kpss_diff <- kpss.test(bank_diff, null = "Level")
+        print(kpss_diff)
         
-        if (adf_diff$p.value < 0.05) {
+        if (adf_diff$p.value < 0.05 || kpss_diff$p.value >= 0.05) {
             cat("\nThe first difference is STATIONARY\n")
             cat("\nThe original series is integrated of order 1, I(1)\n")
         }

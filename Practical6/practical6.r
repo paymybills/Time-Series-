@@ -124,16 +124,22 @@ cat("--- ADF Test on Original Series ---\n")
 adf_test <- adf.test(AirPassengers, alternative = "stationary")
 print(adf_test)
 
-cat("\nInterpretation:\n")
+cat("\n--- KPSS Test on Original Series ---\n")
+kpss_test <- kpss.test(AirPassengers, null = "Trend")
+print(kpss_test)
+
+cat("\nInterpretation (ADF):\n")
 if (adf_test$p.value < 0.05) {
-    cat("p-value =", adf_test$p.value, "< 0.05\n")
-    cat("Result: REJECT the null hypothesis\n")
-    cat("Conclusion: The series is STATIONARY\n")
+    cat("ADF p-value =", adf_test$p.value, "< 0.05 → STATIONARY\n")
 } else {
-    cat("p-value =", adf_test$p.value, ">= 0.05\n")
-    cat("Result: FAIL TO REJECT the null hypothesis\n")
-    cat("Conclusion: The series is NON-STATIONARY\n")
-    cat("The series has a unit root and requires transformation\n")
+    cat("ADF p-value =", adf_test$p.value, ">= 0.05 → NON-STATIONARY\n")
+}
+
+cat("Interpretation (KPSS):\n")
+if (kpss_test$p.value < 0.05) {
+    cat("KPSS p-value =", kpss_test$p.value, "< 0.05 → NON-STATIONARY\n")
+} else {
+    cat("KPSS p-value =", kpss_test$p.value, ">= 0.05 → STATIONARY\n")
 }
 
 # Test on log-transformed data (to stabilize variance)
@@ -157,6 +163,10 @@ cat("Log-transformed plot saved: plot5_log_transform.png\n")
 adf_log <- adf.test(log_passengers, alternative = "stationary")
 cat("\n--- ADF Test on Log-Transformed Series ---\n")
 print(adf_log)
+
+kpss_log <- kpss.test(log_passengers, null = "Trend")
+cat("\n--- KPSS Test on Log-Transformed Series ---\n")
+print(kpss_log)
 
 # Always perform differencing for demonstration purposes
 cat("\n========== Performing Differencing for Analysis ==========\n")
@@ -182,10 +192,14 @@ adf_diff_log <- adf.test(diff_log_passengers, alternative = "stationary")
 cat("\n--- ADF Test on Differenced Log Series ---\n")
 print(adf_diff_log)
 
-if (adf_diff_log$p.value < 0.05) {
-    cat("\nThe differenced log series is STATIONARY\n")
-    cat("Transformation: log(X) then difference → achieves stationarity\n")
-}
+    kpss_diff_log <- kpss.test(diff_log_passengers, null = "Level")
+    cat("\n--- KPSS Test on Differenced Log Series ---\n")
+    print(kpss_diff_log)
+    
+    if (adf_diff_log$p.value < 0.05 || kpss_diff_log$p.value >= 0.05) {
+        cat("\nThe differenced log series is STATIONARY\n")
+        cat("Transformation: log(X) then difference → achieves stationarity\n")
+    }
 
 # Test seasonal difference as well
 cat("\n========== Testing Seasonal Difference ==========\n")
@@ -212,7 +226,11 @@ if (length(seasonal_diff) > 13) {
     cat("\n--- ADF Test on Seasonally Differenced Series ---\n")
     print(adf_seasonal)
     
-    if (adf_seasonal$p.value < 0.05) {
+    kpss_seasonal <- kpss.test(seasonal_diff, null = "Level")
+    cat("\n--- KPSS Test on Seasonally Differenced Series ---\n")
+    print(kpss_seasonal)
+    
+    if (adf_seasonal$p.value < 0.05 || kpss_seasonal$p.value >= 0.05) {
         cat("\nThe fully differenced series is STATIONARY\n")
         cat("Suggested ARIMA model: ARIMA(p,1,q)(P,1,Q)[12]\n")
         cat("This is a seasonal ARIMA model with:\n")
