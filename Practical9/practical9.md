@@ -52,19 +52,20 @@ best_model <- auto.arima(bank_ts, seasonal = TRUE, stepwise = FALSE, approximati
 summary(best_model)
 ```
 
-### 5. Forecasting as a Function
-The primary forecasting function is `forecast()`, which takes the fitted model object and the horizon `h` (number of periods) as arguments:
+### 5. Residual Diagnostics & Goodness of Fit
+Before forecasting, we must ensure the model is statistically sound by checking if the residuals behave like white noise:
+```r
+# Checkresiduals function performs Ljung-Box test and plots residual distribution
+checkresiduals(best_model)
+```
+
+### 6. Forecasting as a Function
+Once the model's goodness of fit is confirmed, the primary forecasting function is `forecast()`, which takes the fitted model object and the horizon `h` (number of periods) as arguments:
 ```r
 # Forecasting the next 20 months (h=20)
 bank_forecast <- forecast(best_model, h = 20)
 # Visualizing the forecast including confidence intervals
 plot(bank_forecast)
-```
-
-### 6. Residual Diagnostics
-```r
-# Checkresiduals function performs Ljung-Box test and plots residual distribution
-checkresiduals(best_model)
 ```
 
 ## Analysis and Results
@@ -91,7 +92,12 @@ The `auto.arima` function selected an **ARIMA(0,2,1)** model.
 - **AIC**: 26.13
 - **BIC**: 30.57
 
-### 5. Forecast (Next 20 Months)
+### 5. Residual Diagnostics (Goodness of Fit)
+The Ljung-Box test resulted in a p-value of **0.4446**, which is greater than 0.05. This indicates that the residuals are indistinguishable from white noise, meaning the model has captured the underlying pattern well and is suitable for forecasting.
+
+![Residuals](plots/plot5_residuals.png)
+
+### 6. Forecast (Next 20 Months)
 The forecast predicts a continued upward linear trend for the next 20 months.
 
 | Period | Month-Year | Point Forecast | 95% Lower Bound | 95% Upper Bound |
@@ -103,11 +109,6 @@ The forecast predicts a continued upward linear trend for the next 20 months.
 | +20 Months | Jun 8 | **120.93** | 101.21 | 140.65 |
 
 ![20-Month Forecast](plots/plot4_forecast.png)
-
-### 6. Residual Diagnostics
-The Ljung-Box test resulted in a p-value of **0.4446**, which is greater than 0.05. This indicates that the residuals are indistinguishable from white noise, meaning the model has captured the underlying pattern well.
-
-![Residuals](plots/plot5_residuals.png)
 
 ## Projections and Key Insights
 - **Trend Persistent**: The ARIMA(0,2,1) model with $d=2$ implies that the series is non-stationary and the trend is very persistent, leading to a strong linear projection.

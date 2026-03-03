@@ -51,19 +51,20 @@ final_model <- auto.arima(ap, lambda = 0, seasonal = TRUE, stepwise = FALSE, app
 summary(final_model)
 ```
 
-### 5. Forecasting as a Function
-The forecasting function `forecast()` is used on the fitted model. Since we used `lambda=0`, the function automatically back-transforms the logs back to original passenger counts:
+### 5. Goodness of Fit (Residual Diagnostics)
+Before generating forecasts, we examine the residuals to ensure no patterns remain and the error term is white noise:
+```r
+# Checkresiduals function calculates Ljung-Box test and plots ACF/Histogram
+checkresiduals(final_model)
+```
+
+### 6. Forecasting as a Function
+Once the model is validated, the forecasting function `forecast()` is applied. Since `lambda=0` was used, it automatically back-transforms the log-scale results back to original units:
 ```r
 # Forecasting the next 12 months (h=12)
 ap_forecast <- forecast(final_model, h = 12)
 # Plotting the forecast with seasonal behavior maintained
 plot(ap_forecast)
-```
-
-### 6. Model Validation
-```r
-# Verifying white noise residuals
-checkresiduals(final_model)
 ```
 
 ## Results
@@ -84,7 +85,12 @@ The KPSS test rejected stationarity ($p < 0.01$). The `auto.arima()` function se
 - **AIC**: -483.4
 - **BIC**: -474.77
 
-### 4. Forecast for 1961 (Next 12 Months)
+### 4. Goodness of Fit (Residual Diagnostics)
+The **Ljung-Box** test gave a p-value of **0.233** (> 0.05), indicating that the residuals are randomly distributed (white noise). This confirms that the model is a good fit and can reliably be used for forecasting.
+
+![Residuals](plots/plot5_residuals.png)
+
+### 5. Forecast for 1961 (Next 12 Months)
 The forecast continues both the growth trend and the seasonal patterns.
 
 | Month | Point Forecast (1000s) | 95% Confidence Interval |
@@ -103,11 +109,6 @@ The forecast continues both the growth trend and the seasonal patterns.
 | Dec 1961 | **477.2** | [406.2, 560.7] |
 
 ![Forecast Plot](plots/plot4_forecast.png)
-
-### 5. Residual Diagnostics
-The **Ljung-Box** test gave a p-value of **0.233** (> 0.05), indicating that the residuals are randomly distributed (white noise). This confirms the model is a good fit.
-
-![Residuals](plots/plot5_residuals.png)
 
 ## Conclusion
 The forecasting model **SARIMA(0,1,1)(0,1,1)₁₂** predicts that airline passenger numbers will continue to grow through 1961, maintaining the established seasonal peaks (peaking in July/August) and troughs (trough in November).
