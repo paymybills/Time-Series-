@@ -16,6 +16,28 @@ The goal of this analysis is to forecast the monthly volume of commercial bank r
 5. **Forecasting**: Generated a 20-month forecast with 80% and 95% confidence intervals.
 6. **Diagnostics**: Checked residuals for white noise properties using the Ljung-Box test.
 
+## Code Snippet
+The following R code was used to perform the analysis and generate the forecast:
+
+```r
+library(tseries)
+library(forecast)
+
+# Load data and convert to time series
+bank_data <- read.table("../Practical7/bank_case.txt", header = FALSE)
+bank_ts <- ts(bank_data$V1, frequency = 12, start = c(1, 1))
+
+# Select best model
+best_model <- auto.arima(bank_ts, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+
+# Forecast next 20 months
+bank_forecast <- forecast(best_model, h = 20)
+plot(bank_forecast)
+
+# Diagnostics
+checkresiduals(best_model)
+```
+
 ## Analysis and Results
 
 ### 1. Data Visualization

@@ -16,6 +16,28 @@ The objective is to analyze the monthly international airline passengers dataset
 5. **Validation**: Performed residual diagnostics (Ljung-Box test).
 6. **Forecasting**: Projected values for the next 12 months.
 
+## Code Snippet
+The following R code was used to perform the analysis and generate the forecast:
+
+```r
+library(tseries)
+library(forecast)
+
+# Load data
+data(AirPassengers)
+ap <- AirPassengers
+
+# Select best model with log transformation (lambda=0)
+final_model <- auto.arima(ap, lambda = 0, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+
+# Forecast next 12 months
+ap_forecast <- forecast(final_model, h = 12)
+plot(ap_forecast)
+
+# Diagnostics
+checkresiduals(final_model)
+```
+
 ## Results
 
 ### 1. Data Overview
