@@ -17,24 +17,53 @@ The goal of this analysis is to forecast the monthly volume of commercial bank r
 6. **Diagnostics**: Checked residuals for white noise properties using the Ljung-Box test.
 
 ## Code Snippet
-The following R code was used to perform the analysis and generate the forecast:
+The analysis followed a structured approach, utilizing the `forecast` and `tseries` libraries:
 
+### 1. Data Preparation & Time Series Object
 ```r
-library(tseries)
-library(forecast)
-
-# Load data and convert to time series
+# Loading the commercial loan volume from a text file
 bank_data <- read.table("../Practical7/bank_case.txt", header = FALSE)
+# Converting to a monthly time series (frequency=12)
 bank_ts <- ts(bank_data$V1, frequency = 12, start = c(1, 1))
+```
 
-# Select best model
+### 2. Exploratory Data Analysis & Decomposition
+```r
+# Plotting the original series to identify components
+plot(bank_ts, main = "Commercial Bank Real Estate Loans")
+# Additive decomposition to observe the strong trend
+bank_decomp <- decompose(bank_ts, type = "additive")
+plot(bank_decomp)
+```
+
+### 3. Stationarity Testing
+```r
+# KPSS test for level stationarity
+kpss.test(bank_ts, null = "Level")
+# ACF/PACF analysis
+acf(bank_ts, lag.max = 48)
+pacf(bank_ts, lag.max = 48)
+```
+
+### 4. Optimal Model Selection (auto.arima)
+```r
+# Use auto.arima to find the best (S)ARIMA parameters based on minimized AIC/BIC
 best_model <- auto.arima(bank_ts, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+summary(best_model)
+```
 
-# Forecast next 20 months
+### 5. Forecasting as a Function
+The primary forecasting function is `forecast()`, which takes the fitted model object and the horizon `h` (number of periods) as arguments:
+```r
+# Forecasting the next 20 months (h=20)
 bank_forecast <- forecast(best_model, h = 20)
+# Visualizing the forecast including confidence intervals
 plot(bank_forecast)
+```
 
-# Diagnostics
+### 6. Residual Diagnostics
+```r
+# Checkresiduals function performs Ljung-Box test and plots residual distribution
 checkresiduals(best_model)
 ```
 

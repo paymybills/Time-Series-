@@ -17,24 +17,52 @@ The objective is to analyze the monthly international airline passengers dataset
 6. **Forecasting**: Projected values for the next 12 months.
 
 ## Code Snippet
-The following R code was used to perform the analysis and generate the forecast:
+The analysis followed a structured approach, utilizing the `forecast` and `tseries` libraries:
 
+### 1. Data Preparation
 ```r
-library(tseries)
-library(forecast)
-
-# Load data
+# Loading the built-in R AirPassengers dataset
 data(AirPassengers)
 ap <- AirPassengers
+```
 
-# Select best model with log transformation (lambda=0)
+### 2. Exploratory Data Analysis & Decomposition
+```r
+# Identifying trend and seasonality
+plot(ap, main = "AirPassengers Time Series")
+# Multiplicative decomposition because variance increases with level
+ap_decomp <- decompose(ap, type = "multiplicative")
+plot(ap_decomp)
+```
+
+### 3. Stationarity Analysis
+```r
+# Testing for level stationarity
+kpss.test(ap, null = "Level")
+# ACF/PACF plots for seasonal patterns
+acf(ap, lag.max = 48)
+pacf(ap, lag.max = 48)
+```
+
+### 4. Model selection (with Log Transformation)
+```r
+# Fit SARIMA with lambda=0 (Log-transformation) to stabilize variance
 final_model <- auto.arima(ap, lambda = 0, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+summary(final_model)
+```
 
-# Forecast next 12 months
+### 5. Forecasting as a Function
+The forecasting function `forecast()` is used on the fitted model. Since we used `lambda=0`, the function automatically back-transforms the logs back to original passenger counts:
+```r
+# Forecasting the next 12 months (h=12)
 ap_forecast <- forecast(final_model, h = 12)
+# Plotting the forecast with seasonal behavior maintained
 plot(ap_forecast)
+```
 
-# Diagnostics
+### 6. Model Validation
+```r
+# Verifying white noise residuals
 checkresiduals(final_model)
 ```
 
