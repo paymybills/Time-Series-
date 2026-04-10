@@ -1,0 +1,4 @@
+h = 0.1	 x=0.5 numeric	 exact	 error
+0.1	 0	 1	 1
+0.05	 0	 1	 1
+0.2	 0	 1	 1
