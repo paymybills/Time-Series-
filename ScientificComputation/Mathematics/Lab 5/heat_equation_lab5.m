@@ -1,13 +1,12 @@
 clc
 
 L = 1;
-T = 0.5;
 h = 0.25;
 k = 0.01;
 C = 1;
 
 N = round(L / h);
-M = round(T / k);
+M = 2;
 x = 0:h:L;
 lambda = k / (C * h^2);
 
